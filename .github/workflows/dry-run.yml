@@ -27,14 +27,6 @@ jobs:
         # Auto-generate minimal Helm chart
         helm create flask-chart
         
-        # Remove unnecessary templates
-        rm -rf flask-chart/charts 
-        rm -rf flask-chart/templates/tests
-        rm flask-chart/templates/hpa.yaml 
-        rm flask-chart/templates/ingress.yaml
-        rm flask-chart/templates/serviceaccount.yaml
-        rm flask-chart/templates/_helpers.tpl
-        
         # Update values.yaml
         cat > flask-chart/values.yaml << 'EOF'
         replicaCount: 2
