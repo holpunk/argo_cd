@@ -1,8 +1,19 @@
 replicaCount: 2
+
 image:
-  repository: your-registry/flask-api
-  tag: "v1"
+  repository: flask-api
+  pullPolicy: IfNotPresent
+  tag: "latest"
   port: 5000
+
 service:
   type: ClusterIP
   port: 80
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi

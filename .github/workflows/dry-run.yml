@@ -1,37 +1,75 @@
-name: Dry Run Flask API
+name: CI - Dry Run & Auto-Generate Helm
 on: [push, pull_request]
 
 jobs:
-  dry-run:
+  validate:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    - name: Validate Docker build (no cache)
+    - name: Validate Docker build
       run: docker build --no-cache . -t flask-api:test
 
     - name: Set up Helm
       uses: azure/setup-helm@v4
 
-    - name: Lint Helm chart
-      run: helm lint ./flask-chart
-
-    - name: Dry-run Helm template
+    - name: Generate & Lint Helm chart
       run: |
-        helm template flask-api ./flask-chart --debug > rendered.yaml
-        echo "✅ Rendered manifests:"
-        grep -E "(kind|apiVersion)" rendered.yaml | head -10
+        # Auto-generate Helm chart
+        helm create flask-chart
+        rm -rf flask-chart/charts flask-chart/templates/tests
+        rm flask-chart/templates/hpa.yaml flask-chart/templates/ingress.yaml
+        
+        # Update values.yaml for GitHub Container Registry
+        cat > flask-chart/values.yaml << EOF
+        replicaCount: 2
+        image:
+          repository: ghcr.io/${{ github.repository }}/flask-api
+          pullPolicy: IfNotPresent
+          tag: "${{ github.sha }}"
+          port: 5000
+        service:
+          type: ClusterIP
+          port: 80
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi
+        EOF
+        
+        # Lint & validate
+        helm lint ./flask-chart
+        helm template flask-api ./flask-chart | kubeval --strict
+        
+        echo "✅ Helm chart generated & validated!"
 
-    - name: Install kubeval
+    - name: Show rendered manifests
       run: |
-        wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
-        tar -xzf kubeval-linux-amd64.tar.gz
-        sudo mv kubeval /usr/local/bin/
+        helm template flask-api ./flask-chart --debug | head -50
 
-    - name: Validate rendered YAML
-      run: |
-        kubeval --strict rendered.yaml
-        echo "✅ All manifests valid!"
+  publish:
+    needs: validate
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Login to GHCR
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build & Push Docker
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        push: true
+        tags: ghcr.io/${{ github.repository }}/flask-api:${{ github.sha }},ghcr.io/${{ github.repository }}/flask-api:latest

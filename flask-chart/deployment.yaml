@@ -1,13 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+meta
+  name: {{ include "flask-api.fullname" . }}
 spec:
   replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "flask-api.selectorLabels" . | nindent 4 }}
   template:
+    meta
+      labels:
+        {{- include "flask-api.selectorLabels" . | nindent 8 }}
     spec:
       containers:
-      - name: flask-api
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-        ports:
-        - containerPort: {{ .Values.image.port }}
-        resources:
-          requests:
-            cpu: 100m
-            memory: 128Mi
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.image.port }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
