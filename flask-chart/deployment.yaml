@@ -1,0 +1,13 @@
+spec:
+  replicas: {{ .Values.replicaCount }}
+  template:
+    spec:
+      containers:
+      - name: flask-api
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        ports:
+        - containerPort: {{ .Values.image.port }}
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi

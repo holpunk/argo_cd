@@ -1,0 +1,30 @@
+name: Dry Run Flask API
+on: [push, pull_request]
+
+jobs:
+  dry-run:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Dry-run Docker build
+      run: |
+        docker buildx build --dry-run --load . -t flask-api:test
+
+    - name: Lint Helm chart
+      uses: helm/kind-action/helm@master
+      with:
+        args: lint ./flask-chart
+
+    - name: Dry-run Helm template
+      run: |
+        helm template flask-api ./flask-chart --debug > rendered.yaml
+        echo "✅ Rendered manifests:"
+        grep -E "(kind|apiVersion)" rendered.yaml | head -10
+
+    - name: Validate rendered YAML
+      run: |
+        find . -name "*.yaml" -exec kubeval --strict {} \;
