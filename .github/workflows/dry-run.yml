@@ -13,15 +13,30 @@ jobs:
     - name: Set up Helm
       uses: azure/setup-helm@v4
 
+    - name: Install kubeval
+      run: |
+        wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
+        tar -xzf kubeval-linux-amd64.tar.gz
+        sudo mv kubeval /usr/local/bin/
+
     - name: Generate & Lint Helm chart
       run: |
-        # Auto-generate Helm chart
-        helm create flask-chart
-        rm -rf flask-chart/charts flask-chart/templates/tests
-        rm flask-chart/templates/hpa.yaml flask-chart/templates/ingress.yaml
+        # Clean any existing chart
+        rm -rf flask-chart/
         
-        # Update values.yaml for GitHub Container Registry
-        cat > flask-chart/values.yaml << EOF
+        # Auto-generate minimal Helm chart
+        helm create flask-chart
+        
+        # Remove unnecessary templates
+        rm -rf flask-chart/charts 
+        rm -rf flask-chart/templates/tests
+        rm flask-chart/templates/hpa.yaml 
+        rm flask-chart/templates/ingress.yaml
+        rm flask-chart/templates/serviceaccount.yaml
+        rm flask-chart/templates/_helpers.tpl
+        
+        # Update values.yaml
+        cat > flask-chart/values.yaml << 'EOF'
         replicaCount: 2
         image:
           repository: ghcr.io/${{ github.repository }}/flask-api
@@ -48,28 +63,4 @@ jobs:
 
     - name: Show rendered manifests
       run: |
-        helm template flask-api ./flask-chart --debug | head -50
-
-  publish:
-    needs: validate
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Login to GHCR
-      uses: docker/login-action@v3
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Build & Push Docker
-      uses: docker/build-push-action@v6
-      with:
-        context: .
-        push: true
-        tags: ghcr.io/${{ github.repository }}/flask-api:${{ github.sha }},ghcr.io/${{ github.repository }}/flask-api:latest
+        helm template flask-api ./flask-chart | grep -E "(kind|apiVersion)" | head -10
