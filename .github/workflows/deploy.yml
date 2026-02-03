@@ -1,0 +1,60 @@
+name: Deploy to Argo CD
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'flask-chart/values.yaml'
+      - 'README.md'
+
+env:
+  # Use docker.io for Docker Hub if empty
+  REGISTRY: docker.io
+  # github.repository as <account>/<repo>
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,format=long
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Update Helm Chart Version
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Update the tag in values.yaml to match the new image tag (sha-<commit_sha>)
+          sed -i "s/tag: .*/tag: \"sha-${GITHUB_SHA}\"/" flask-chart/values.yaml
+          
+          git add flask-chart/values.yaml
+          git commit -m "Update image tag to sha-${GITHUB_SHA} [skip ci]"
+          git push
