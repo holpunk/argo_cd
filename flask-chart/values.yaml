@@ -1,7 +1,7 @@
 replicaCount: 2
 
 image:
-  repository: holpunk/argo_cd
+  repository: aqshey/argo_cd
   pullPolicy: Always
   tag: "latest"
   port: 5000
