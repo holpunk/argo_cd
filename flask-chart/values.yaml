@@ -1,8 +1,8 @@
 replicaCount: 2
 
 image:
-  repository: flask-api
-  pullPolicy: IfNotPresent
+  repository: holpunk/argo_cd
+  pullPolicy: Always
   tag: "latest"
   port: 5000
 
