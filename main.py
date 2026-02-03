@@ -1,6 +1,10 @@
 from flask import Flask, jsonify, request
+from prometheus_flask_exporter import PrometheusMetrics
+from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 
 app = Flask(__name__)
+metrics = PrometheusMetrics(app)
+
 items = [
     {"name": "Laptop", "price": 1000},
     {"name": "Mouse", "price": 20},
@@ -18,5 +22,13 @@ def add_item():
     items.append(data)
     return jsonify({'message': 'Item added', 'item': data}), 201
 
+
+
+@app.route('/metrics')
+def metrics_endpoint():
+    data = generate_latest(metrics.registry)
+    return data, 200, {'Content-Type': CONTENT_TYPE_LATEST}
+
 if __name__ == '__main__':
+    print(f"Registered Routes: {app.url_map}", flush=True)
     app.run(host='0.0.0.0', debug=True)
