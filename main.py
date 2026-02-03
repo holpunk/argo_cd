@@ -1,7 +1,11 @@
 from flask import Flask, jsonify, request
 
 app = Flask(__name__)
-items = []
+items = [
+    {"name": "Laptop", "price": 1000},
+    {"name": "Mouse", "price": 20},
+    {"name": "Keyboard", "price": 50}
+]
 
 @app.route('/items', methods=['GET'])
 def get_items():
