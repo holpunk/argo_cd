@@ -33,8 +33,12 @@ else
 fi
 
 # 3. Build & Deploy Flask App
+# --- CONFIGURATION (CHANGE THESE) ---
+IMAGE_NAME="aqshey/argo_cd:latest" # Change this to your dockerhub_username/repo:tag
+# ------------------------------------
+
 echo "Building Flask App Docker Image..."
-docker build -t aqshey/argo_cd:latest .
+docker build -t "$IMAGE_NAME" .
 
 echo "Deploying Flask App via Helm..."
 helm upgrade --install flask-app ./flask-chart

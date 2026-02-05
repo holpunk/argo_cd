@@ -20,6 +20,20 @@ Ensure you have the following installed on your local machine:
 3.  **Kubectl** (`brew install kubectl`).
 4.  **ArgoCD CLI** (optional, for managing ArgoCD).
 
+## Configuration (IMPORTANT)
+
+Before running the scripts, you **MUST** update the following files with your own values:
+
+1.  **`prepare.sh` & `start_all.sh`**:
+    -   Open these files and find the `CONFIGURATION` section at the top.
+    -   Change `IMAGE_NAME` to your own DockerHub username/repo (e.g., `youruser/argo_cd:latest`).
+
+2.  **`flask-chart/values.yaml`**:
+    -   Update `image.repository` to match the image name you set above (e.g., `youruser/argo_cd`).
+
+3.  **`argocd-app.yaml`**:
+    -   Update `repoURL` to point to **YOUR** forked GitHub repository.
+
 ## Quick Start (Local Deployment)
 
 This project includes scripts to automate the deployment process on a local Kubernetes cluster.

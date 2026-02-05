@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/holpunk/argo_cd.git
+    repoURL: https://github.com/holpunk/argo_cd.git # <== REPLACE WITH YOUR REPO URL
     targetRevision: HEAD
     path: flask-chart
   destination:
