@@ -3,7 +3,7 @@ replicaCount: 2
 image:
   repository: aqshey/argo_cd # Change this to your dockerhub_username/repo
   pullPolicy: IfNotPresent
-  tag: "sha-c5a1406659bda12d95a17ade093010b3b608435f"
+  tag: "sha-93cfc91b5cd80f5dec1ec86319846011cf991e0a"
   port: 5000
 
 service:
