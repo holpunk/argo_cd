@@ -3,7 +3,7 @@ replicaCount: 2
 image:
   repository: aqshey/argo_cd
   pullPolicy: IfNotPresent
-  tag: "sha-720eb8b19df8e321545c431ba99ea82965aec787"
+  tag: "sha-c5a1406659bda12d95a17ade093010b3b608435f"
   port: 5000
 
 service:
