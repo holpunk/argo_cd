@@ -55,4 +55,5 @@ for i in {1..10}; do
 done
 
 echo -e "${GREEN}All services started!${NC}"
-echo "Run './connect.sh' to access the application and dashboards."
+echo -e "${BLUE}Starting port forwarding automatically...${NC}"
+./connect.sh
